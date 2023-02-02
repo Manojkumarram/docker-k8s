@@ -1,0 +1,18 @@
+version: '3.3'
+services:
+ hello-world:
+    image: dockrtraining/hello-docker
+    ports:
+        - "9090:8080"
+    network:
+        - frontend-net
+    volume:
+        - testvol:/app
+volumes:
+    - testvol
+        
+networks:
+    - frontend-net
+    - backend-net
+ 
+docker run --name hello-world -p 9090:8080 --network frontend-net -v testvol:/app dockrtraining/hello-docker
