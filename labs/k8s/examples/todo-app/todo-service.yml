@@ -1,39 +1,36 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: product-service
+  name: todo-lb-service
   labels:
-    app: product-service
+    app: todo-lb-service
 spec:
   type: LoadBalancer
   selector:
-    app: product-service  
+    app: todo-app  
   ports:
-  - port: 8091
+  - port: 3000
   externalIPs:
-  - 172.17.0.103
+  - 192.168.49.2
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: product-service
+  name: todo-service
   labels:
-    app: product-service
+    app: todo-app-deploy
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: product-service
+      app: todo-app
   template:
     metadata:
       labels:
-        app: product-service
+        app: todo-app
     spec:
       containers:
-      - name: product-service
-        image: dockrtraining/scart-product-service:v1
+      - name: todo-app-service
+        image: dockrtraining/todo-app
         ports:
-        - containerPort: 8091
-        env:
-        - name: REGISTRY_SERVER_HOST
-          value: 10.97.214.28      
+        - containerPort: 3000     
