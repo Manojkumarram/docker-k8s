@@ -1,0 +1,314 @@
+Docker
+
+	- VMs vs Containers
+	- What is Docker?
+	- Why is Docker?
+	- Docker Architecture
+		- Docker Client
+			- Docker CLI
+			- API / SDK
+			- Docker Desktop GUI
+			- Plugins / Extensions
+		- Docker Host
+			- Docker Daemon
+			- Images
+			- Containers
+
+		- Registry
+			- Local
+			- Public	- DockerHub	
+			- Private	- Nexus | Artifactory | ECR | GCR
+
+	- Docker Concepts
+		- Image -> Blueprint or Template to create container
+		- Container	-> Running instance of a image
+
+	- Create Container
+		Docker Client -> Scan the image in local registry 
+						-> If available, creates container 
+						-> If not available, pulls the image and creates container
+
+	- Docker Commands
+		- docker create -m 10000 —cpus 1 <image-name>
+		- docker start
+		- docker run -p 80:80 demo1 nginx
+		- docker run -p 81:80 demo2 nginx
+		- docker stop
+		- docker pause
+		- docker unpause
+	
+		- docker ps
+		- docker ps -a
+		- docker ps -as
+		
+		- docker logs
+		- docker stats
+		- docker top
+		- docker exec -it <container-name>
+		- docker commit
+
+		- docker rm <container-name>
+		- docker rm -f <container-name>
+		- docker rmi <image-name>
+
+		- docker diff <container-name>
+		- docker cp <src-path> <container-name>:<target-path>
+
+
+	How to Dockerize an application?
+
+		1. Build the application - JAR
+		2. Create Dockerfile - have instructions to create image
+		3. Build Docker Image - supplying Dockerfile -> docker build
+		4. Create container from Docker image and run with exposing the app ports
+		5. Access the application running inside the container from browser
+
+     Dockerfile
+		1. Base image
+		2. Metadata for images thru Labels
+		3. Install pre-requisite softwares - RUN
+		4. Setup Working Directory
+		5. Copy application bundle
+		6. Configure the application
+		7. Specify EntryPoint / CMD
+		8. Expose Ports
+
+
+		FROM <image-name>
+		LABEL <key>=<value>
+		ENV <key>=<value>
+		ARG <key>
+		RUN <command>		
+		WORKDIR <path>
+		VOL <volname>
+		COPY <src> <target>
+		ADD   <src> <target>
+		CMD /bin/sh -c java -jar app.jar
+		CMD [“java”,  “-jar”, “app.jar”]
+
+		ENTRYPOINT /bin/sh -c java -jar app.jar
+		ENTRYPOINT [“java”,  “-jar”, “app.jar”]
+		CMD [“msg1”]
+		
+		EXPOSE <port>
+
+		docker build —build-arg SRC_PATH=“./target/*.jar” -t hello-world-docker .
+		docker run -e MYSQL_ROOT_PASSWORD=secret -e MYSQL_DATABASE=todos mysql
+
+
+     How to upload Docker image into DockerHub Registry?
+
+		1. Signup with DockerHub and Login
+		2. Create Repository to upload Docker image
+		3. Login into DockerHub Account from Docker CLI
+		4. Tag the Docker Image
+		5. Upload the Docker Image into DockerHub
+
+   How to persist container data?
+		Bind Mount
+			- mounts host FS into container
+			- src directory should exist
+			- docker run -—mount type=bind;src=/home/docker;target=/app nginx
+			   docker run -v /home/docker:/app nginx
+
+		Volume
+			- managed by Docker engine
+			- stores data in Docker Area
+			- provides abstraction on underlying storage
+				
+			docker run -—mount type=volume;src=testvol;target=/app nginx	
+			docker  run -v testvol:/usr/share/nginx/html nginx	
+
+			/var/lib/docker/volumes/testvol/_data
+
+		tmpfs
+			- stores data in the memory
+			- available as long as Docker Engine is running
+
+  How to enable communication b/w the containers (networking)?
+		none
+		bridge
+		host
+		overlay
+		macvlan
+		ipvlan
+
+
+		docker network create todo-frontend
+		docker network create todo-backend
+		docker network create todo-db
+
+		docker run —network todo-frontend todo-app
+		
+How to deploy multi container apps?
+		Docker Compose
+			docker-compose-scart.yml | compose.yml | docker-compose.yaml | compose.yaml
+			
+				version
+				services
+					service1:
+						image:
+						ports:
+						environment:
+						volume:
+						network:
+						deploy:
+							replicas:
+							update-strategy:
+							restart-strategy:
+					..
+					service1:
+						image:
+						ports
+					..
+				volumes:
+					
+				networks:
+
+			docker-compose up -d
+				- create services -> containers
+				- create volumes
+				- create networks
+
+			docker-compose down
+				- delete services -> containers
+				- delete volumes
+				- delete networks
+
+			docker-compose -f docker-compose-scart.yml up -d
+			docker-compose -f docker-compose-scart.yml down
+
+
+		Docker Swarm
+			- Container Orchestration / Management Platform
+			- Supports only Docker containers
+			- Scaling
+			- Load Balancing
+			- Self Healing
+			- HA
+			- Fault Tolerance
+
+			- Swarm Architecture
+				- Docker Client
+				- Swarm Manager [Master]
+				- Swarm Node [Worker]
+			
+			docker swarm init —advertised-ip=<ip>
+			docker swarm join <token>
+			docker node ls
+
+			docker stack deploy -c docker-compose-swarm.yml <stack-name>
+				- create stack
+				- create services
+				- create containers
+				- create volumes
+				- create networks
+
+			docker service ls
+			docker service ps <service-name>
+
+			docker service scale <service-name>=<no of instances>
+			docker kill <container-id>			
+			
+
+	Kubernetes
+			- Free and Open source
+			- Supports various containers which are compliant to CRI (Container Runtime Interface)
+			- Suited for complex use cases
+			- Moduler, Loosely coupled, scalable, robust architecture
+			- Provides Monitoring Dashboard - Web UI
+
+			Architecture
+				
+				Master - Control Plane
+					- API Server
+					- etcd
+					- Kube Controller Manager
+					- Scheduler
+					- Cloud Controller Manager
+
+				Worker [Node] - Data Plane
+					- Kubelet
+					- Kube Proxy
+					- Container Runtime Engine
+					
+				Client
+					- CLI - Kubectl
+					- Web UI
+					- REST / SDK API 
+			
+				Minikube - vm bundled with all k8s components
+
+				Kubectl - k8s cli client
+
+					kubectl create -f <file path/url>
+
+				manifest.yml
+					api-version
+					kind: pod | deployment | service | rs | job | sts | dst | cronjob
+					metadata:
+						name: <resource-name>
+						labels:
+							<key>:<value>
+							app: product-service
+							env: dev
+							version: 1.0
+						annotations:
+							<key>:<value>
+							description: “Shopping Cart Product Service”
+					spec:
+						containers:
+							- <name>:
+								image:
+								ports:
+
+		Workloads
+			
+			- Deployment
+			- Service
+				- ClusterIP
+				- NodePort
+				- LoadBalancer
+				- External Name
+			- ReplicaSet
+			- Replication Controller
+			
+			- StatefulSet
+			- DaemonSet
+
+			- Job
+			- CronJob
+
+		Persistence
+			
+			- Volume
+			- Persistent Volume
+			- Persistent Volume Claim
+			- Storage Class
+
+		Configuration & Security
+
+			- ConfigMap
+			- Secret
+			- Roles
+			
+		Helm Charts
+
+			- Charts
+			- Repository
+			- Release
+
+			- Install Package
+			- Update Package
+			- Uninstall Package
+
+			- Create custom Package
+			- Upload to central registry
+
+
+
+
+
+
+
+
